@@ -1,0 +1,91 @@
+@import "tailwindcss";
+
+@theme {
+  --color-text-primary: #1A1A1A;
+  --color-text-hover: #808080;
+  --color-error: #912E2E;
+  --font-family-sans: Arial, sans-serif;
+}
+
+* {
+  -webkit-tap-highlight-color: transparent;
+}
+
+body {
+  font-family: Arial, sans-serif;
+  -webkit-font-smoothing: antialiased;
+  text-rendering: optimizeLegibility;
+  -webkit-text-size-adjust: 100%;
+}
+
+::selection {
+  background: #1A1A1A;
+  color: white;
+}
+
+@media (hover: hover) {
+  .hover\:opacity-75:hover {
+    opacity: 0.75;
+  }
+
+  .hover\:text-\[\#808080\]:hover {
+    color: #808080;
+  }
+}
+
+button {
+  touch-action: manipulation;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  *, *::before, *::after {
+    animation-duration: 0.01ms !important;
+    transition-duration: 0.01ms !important;
+  }
+}
+
+@keyframes fadeInScale {
+  from {
+    opacity: 0;
+    transform: scale(0.95);
+  }
+  to {
+    opacity: 1;
+    transform: scale(1);
+  }
+}
+
+.block-enter {
+  animation: fadeInScale 300ms cubic-bezier(0.16, 1, 0.3, 1) forwards;
+}
+
+/* Accessibility: respect reduced motion preference */
+@media (prefers-reduced-motion: reduce) {
+  .block-enter {
+    animation: none;
+    opacity: 1;
+    transform: scale(1);
+  }
+}
+
+.icon-button {
+  /* Smooth return to original state */
+  transition: transform 200ms cubic-bezier(0.34, 1.56, 0.64, 1);
+}
+
+.icon-button:active {
+  /* Quick press down */
+  transform: scale(0.95);
+  transition-duration: 80ms;
+  transition-timing-function: cubic-bezier(0.4, 0, 0.2, 1);
+}
+
+/* Accessibility */
+@media (prefers-reduced-motion: reduce) {
+  .icon-button {
+    transition: none;
+  }
+  .icon-button:active {
+    transform: none;
+  }
+}
