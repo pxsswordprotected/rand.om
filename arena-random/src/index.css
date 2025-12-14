@@ -28,7 +28,15 @@ body {
     opacity: 0.75;
   }
 
+  .hover\:opacity-80:hover {
+    opacity: 0.8;
+  }
+
   .hover\:text-\[\#808080\]:hover {
+    color: #808080;
+  }
+
+  .group:hover .group-hover\:text-\[\#808080\] {
     color: #808080;
   }
 }

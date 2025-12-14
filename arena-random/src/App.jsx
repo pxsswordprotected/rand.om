@@ -1,155 +1,57 @@
-import { useState, useEffect } from "react";
-import { getChannelBlocks, shuffleArray } from "./services/arenaService";
+import { useState, useEffect, useCallback } from "react";
 import {
   ArrowRight,
   CircleNotch,
   Warning,
-  ArrowsClockwise,
+  ArrowClockwise,
 } from "phosphor-react";
-
-const DESIGN_TOKENS = {
-  colors: {
-    text: "#1A1A1A",
-    hover: "#808080",
-    error: "#912E2E",
-    placeholder: "#9CA3AF",
-  },
-  spacing: {
-    inputTop: 48,
-    titleToType: 8,
-    titleToContent: 28,
-  },
-  sizes: {
-    containerWidth: 700,
-    imageWidth: 500,
-    iconSize: 20,
-  },
-  typography: {
-    input: "clamp(14px, 4vw, 18px)",
-    blockTitle: "clamp(18px, 5vw, 22px)",
-    blockType: "clamp(12px, 3.5vw, 14px)",
-    blockContent: "clamp(14px, 4vw, 18px)",
-  },
-};
-
-const preloadImage = (url) => {
-  return new Promise((resolve) => {
-    if (!url) {
-      resolve();
-      return;
-    }
-    const img = new Image();
-    img.onload = () => resolve();
-    img.onerror = () => resolve();
-    img.src = url;
-  });
-};
+import { useArenaChannel } from "./hooks/useArenaChannel";
+import { BlockDisplay } from "./components/BlockDisplay";
+import { DESIGN_TOKENS } from "./constants/designTokens";
 
 function App() {
   const [input, setInput] = useState("");
-  const [shuffledBlocks, setShuffledBlocks] = useState([]);
-  const [currentIndex, setCurrentIndex] = useState(0);
-  const [currentBlock, setCurrentBlock] = useState(null);
-  const [error, setError] = useState("");
-  const [loading, setLoading] = useState(false);
-  const [lastChannel, setLastChannel] = useState("");
-  const [hasLoaded, setHasLoaded] = useState(false);
 
-  const handlePrimaryClick = async () => {
+  const {
+    currentBlock,
+    channelSlug,
+    loading,
+    error,
+    hasLoaded,
+    loadChannel,
+    nextBlock,
+    clearError,
+  } = useArenaChannel();
+
+  const isRefreshState = hasLoaded && input.trim() === channelSlug;
+
+  // Handle form submission
+  const handleSubmit = useCallback(async () => {
     const trimmed = input.trim();
-    if (!trimmed) return;
+    if (!trimmed || loading || error) return;
 
-    // If first time or channel changed → fetch + shuffle + show first
-    const needsNewChannel = !hasLoaded || trimmed !== lastChannel;
-
-    if (needsNewChannel) {
-      setLoading(true);
-      setError("");
-      setCurrentBlock(null);
-
-      try {
-        const fetchedBlocks = await getChannelBlocks(trimmed);
-
-        if (fetchedBlocks.length === 0) {
-          setError("Channel is empty");
-          setLastChannel("");
-          setLoading(false);
-          return;
-        }
-
-        const shuffled = shuffleArray(fetchedBlocks);
-        const firstBlock = shuffled[0];
-
-        // Preload image if it exists
-        if (firstBlock.image?.display?.url) {
-          await preloadImage(firstBlock.image.display.url);
-        }
-
-        setShuffledBlocks(shuffled);
-        setCurrentIndex(0);
-        setCurrentBlock(firstBlock);
-        setLastChannel(trimmed);
-        setHasLoaded(true);
-      } catch (err) {
-        setError(err.message || "Error loading channel");
-        setLastChannel("");
-      }
-
-      setLoading(false);
-      return;
-    }
-
-    // Same channel already loaded → just show next random block from shuffled list
-    if (shuffledBlocks.length === 0) return;
-
-    setLoading(true);
-
-    const nextIndex = (currentIndex + 1) % shuffledBlocks.length;
-
-    // On wraparound, reshuffle to keep it feeling fresh
-    if (nextIndex === 0 && shuffledBlocks.length > 1) {
-      const reshuffled = shuffleArray(shuffledBlocks);
-      const nextBlock = reshuffled[0];
-
-      // Preload image if it exists
-      if (nextBlock.image?.display?.url) {
-        await preloadImage(nextBlock.image.display.url);
-      }
-
-      setShuffledBlocks(reshuffled);
-      setCurrentIndex(0);
-      setCurrentBlock(nextBlock);
+    if (isRefreshState) {
+      await nextBlock();
     } else {
-      const nextBlock = shuffledBlocks[nextIndex];
-
-      // Preload image if it exists
-      if (nextBlock.image?.display?.url) {
-        await preloadImage(nextBlock.image.display.url);
-      }
-
-      setCurrentIndex(nextIndex);
-      setCurrentBlock(nextBlock);
+      await loadChannel(trimmed);
     }
+  }, [input, loading, error, isRefreshState, nextBlock, loadChannel]);
 
-    setLoading(false);
-  };
-
-  // Global Enter key listener for refresh state
+  // Global Enter key for refresh state
   useEffect(() => {
-    const isRefreshState = hasLoaded && input.trim() === lastChannel && !loading && !error;
+    if (!isRefreshState || loading || error) return;
 
-    if (!isRefreshState) return;
-
-    const handleGlobalEnter = (e) => {
+    const handleKeyDown = (e) => {
       if (e.key === "Enter" && e.target.tagName !== "INPUT") {
-        handlePrimaryClick();
+        handleSubmit();
       }
     };
 
-    document.addEventListener("keydown", handleGlobalEnter);
-    return () => document.removeEventListener("keydown", handleGlobalEnter);
-  }, [hasLoaded, input, lastChannel, loading, error]);
+    document.addEventListener("keydown", handleKeyDown);
+    return () => document.removeEventListener("keydown", handleKeyDown);
+  }, [isRefreshState, loading, error, handleSubmit]);
 
+  // Icon rendering (kept inline - tightly coupled to app state)
   const renderIcon = () => {
     if (loading) {
       return (
@@ -160,7 +62,6 @@ function App() {
         />
       );
     }
-
     if (error) {
       return (
         <Warning
@@ -169,20 +70,22 @@ function App() {
         />
       );
     }
-
-    if (hasLoaded && input.trim() === lastChannel) {
+    if (isRefreshState) {
       return (
-        <ArrowsClockwise
+        <ArrowClockwise
           size={DESIGN_TOKENS.sizes.iconSize}
           color={DESIGN_TOKENS.colors.text}
         />
       );
     }
-
     return (
       <ArrowRight
         size={DESIGN_TOKENS.sizes.iconSize}
-        color={input.trim() ? DESIGN_TOKENS.colors.text : DESIGN_TOKENS.colors.placeholder}
+        color={
+          input.trim()
+            ? DESIGN_TOKENS.colors.text
+            : DESIGN_TOKENS.colors.placeholder
+        }
       />
     );
   };
@@ -193,13 +96,11 @@ function App() {
         className="w-full max-w-[700px] mx-auto px-4 sm:px-6 lg:px-0"
         style={{ paddingTop: "clamp(24px, 5vh, 48px)" }}
       >
-        {/* Input with icon */}
+        {/* Input form */}
         <form
           onSubmit={(e) => {
             e.preventDefault();
-            if (!loading && (input.trim() || hasLoaded) && !error) {
-              handlePrimaryClick();
-            }
+            handleSubmit();
           }}
           className="relative w-full"
         >
@@ -208,7 +109,7 @@ function App() {
             value={input}
             onChange={(e) => {
               setInput(e.target.value);
-              if (error) setError("");
+              if (error) clearError();
             }}
             placeholder="Channel link"
             spellCheck="false"
@@ -218,15 +119,15 @@ function App() {
           />
           <button
             type="button"
-            onClick={handlePrimaryClick}
-            disabled={loading || (!input.trim() && !hasLoaded) || error}
-            className="absolute right-0 bottom-0 p-2 disabled:cursor-default enabled:cursor-pointer select-none icon-button"
+            onClick={handleSubmit}
+            disabled={loading || (!input.trim() && !hasLoaded) || !!error}
+            className="absolute right-0 bottom-1 p-2 disabled:cursor-default enabled:cursor-pointer select-none icon-button"
             aria-label={
               loading
                 ? "Loading"
                 : error
                   ? "Error"
-                  : hasLoaded && input.trim() === lastChannel
+                  : isRefreshState
                     ? "Get next block"
                     : "Submit"
             }
@@ -236,127 +137,7 @@ function App() {
         </form>
 
         {/* Block display */}
-        {currentBlock && (
-          <div
-            key={currentBlock.id}
-            className="mt-8 w-full block-enter"
-          >
-            <a
-              href={`https://www.are.na/block/${currentBlock.id}`}
-              target="_blank"
-              rel="noopener noreferrer"
-              className="group inline-block"
-            >
-              <h2
-                className="transition-colors group-hover:text-[#808080]"
-                style={{
-                  fontSize: DESIGN_TOKENS.typography.blockTitle,
-                  color: DESIGN_TOKENS.colors.text,
-                }}
-              >
-                {currentBlock.title ||
-                  currentBlock.source?.title ||
-                  "Untitled"}
-              </h2>
-            </a>
-
-            <p
-              style={{
-                fontSize: DESIGN_TOKENS.typography.blockType,
-                marginTop: `${DESIGN_TOKENS.spacing.titleToType}px`,
-                color: DESIGN_TOKENS.colors.hover,
-              }}
-            >
-              {currentBlock.class}
-            </p>
-
-            <div style={{ marginTop: `${DESIGN_TOKENS.spacing.titleToContent}px` }}>
-              {currentBlock.image && currentBlock.class === "Link" && currentBlock.source?.url ? (
-                <a
-                  href={currentBlock.source.url}
-                  target="_blank"
-                  rel="noopener noreferrer"
-                  className="block w-full sm:max-w-[500px] hover:opacity-75 transition-opacity"
-                  style={{ maxWidth: `${DESIGN_TOKENS.sizes.imageWidth}px` }}
-                >
-                  <img
-                    src={currentBlock.image.display.url}
-                    alt=""
-                    className="w-full"
-                  />
-                </a>
-              ) : currentBlock.image && currentBlock.class === "Media" && (currentBlock.source?.url || currentBlock.attachment?.url) ? (
-                <a
-                  href={currentBlock.source?.url || currentBlock.attachment?.url}
-                  target="_blank"
-                  rel="noopener noreferrer"
-                  className="block w-full sm:max-w-[500px] hover:opacity-75 transition-opacity"
-                  style={{ maxWidth: `${DESIGN_TOKENS.sizes.imageWidth}px` }}
-                >
-                  <img
-                    src={currentBlock.image.display.url}
-                    alt=""
-                    className="w-full"
-                  />
-                </a>
-              ) : currentBlock.image ? (
-                <img
-                  src={currentBlock.image.display.url}
-                  alt=""
-                  className="w-full sm:max-w-[500px]"
-                  style={{ maxWidth: `${DESIGN_TOKENS.sizes.imageWidth}px` }}
-                />
-              ) : null}
-
-              {currentBlock.class === "Link" && currentBlock.source?.url && !currentBlock.image && (
-                <a
-                  href={currentBlock.source.url}
-                  target="_blank"
-                  rel="noopener noreferrer"
-                  className="transition-colors hover:text-[#808080]"
-                  style={{
-                    fontSize: DESIGN_TOKENS.typography.blockContent,
-                    color: DESIGN_TOKENS.colors.text,
-                    textDecoration: "underline",
-                  }}
-                >
-                  {currentBlock.source.url}
-                </a>
-              )}
-
-              {currentBlock.class === "Media" && (currentBlock.source?.url || currentBlock.attachment) && !currentBlock.image && (
-                <a
-                  href={currentBlock.source?.url || currentBlock.attachment?.url}
-                  target="_blank"
-                  rel="noopener noreferrer"
-                  className="transition-colors hover:text-[#808080]"
-                  style={{
-                    fontSize: DESIGN_TOKENS.typography.blockContent,
-                    color: DESIGN_TOKENS.colors.text,
-                    textDecoration: "underline",
-                  }}
-                >
-                  {currentBlock.attachment?.file_name || currentBlock.source?.url || "View media"}
-                </a>
-              )}
-
-              {currentBlock.class !== "Link" &&
-                currentBlock.class !== "Image" &&
-                currentBlock.class !== "Media" &&
-                currentBlock.content && (
-                  <p
-                    className="whitespace-pre-wrap"
-                    style={{
-                      fontSize: DESIGN_TOKENS.typography.blockContent,
-                      color: DESIGN_TOKENS.colors.text,
-                    }}
-                  >
-                    {currentBlock.content}
-                  </p>
-                )}
-            </div>
-          </div>
-        )}
+        <BlockDisplay block={currentBlock} />
       </div>
     </div>
   );
