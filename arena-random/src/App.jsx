@@ -1,4 +1,4 @@
-import { useState, useEffect, useCallback } from "react";
+import { useState, useEffect, useCallback, useRef } from "react";
 import {
   ArrowRight,
   CircleNotch,
@@ -22,6 +22,11 @@ function App() {
     nextBlock,
     clearError,
   } = useArenaChannel();
+
+  // Tooltip state and refs
+  const [showTooltip, setShowTooltip] = useState(false);
+  const tooltipRef = useRef(null);
+  const mousePositionRef = useRef({ x: 0, y: 0 });
 
   const isRefreshState = hasLoaded && input.trim() === channelSlug;
 
@@ -51,6 +56,24 @@ function App() {
     return () => document.removeEventListener("keydown", handleKeyDown);
   }, [isRefreshState, loading, error, handleSubmit]);
 
+  // Tooltip event handlers
+  const handleTooltipMouseEnter = (e) => {
+    mousePositionRef.current = { x: e.clientX, y: e.clientY };
+    setShowTooltip(true);
+  };
+
+  const handleTooltipMouseMove = (e) => {
+    mousePositionRef.current = { x: e.clientX, y: e.clientY };
+    if (tooltipRef.current) {
+      tooltipRef.current.style.left = `${e.clientX + 15}px`;
+      tooltipRef.current.style.top = `${e.clientY + 10}px`;
+    }
+  };
+
+  const handleTooltipMouseLeave = () => {
+    setShowTooltip(false);
+  };
+
   // Icon rendering (kept inline - tightly coupled to app state)
   const renderIcon = () => {
     if (loading) {
@@ -64,10 +87,18 @@ function App() {
     }
     if (error) {
       return (
-        <Warning
-          size={DESIGN_TOKENS.sizes.iconSize}
-          color={DESIGN_TOKENS.colors.error}
-        />
+        <span
+          onMouseEnter={handleTooltipMouseEnter}
+          onMouseMove={handleTooltipMouseMove}
+          onMouseLeave={handleTooltipMouseLeave}
+          className="inline-block relative error-icon-hitbox"
+          style={{ verticalAlign: 'middle' }}
+        >
+          <Warning
+            size={DESIGN_TOKENS.sizes.iconSize}
+            color={DESIGN_TOKENS.colors.error}
+          />
+        </span>
       );
     }
     if (isRefreshState) {
@@ -96,7 +127,7 @@ function App() {
         className="w-full max-w-[700px] mx-auto px-4 sm:px-6 lg:px-0"
         style={{
           paddingTop: "clamp(24px, 5vh, 48px)",
-          paddingBottom: "clamp(24px, 5vh, 48px)"
+          paddingBottom: "clamp(24px, 5vh, 48px)",
         }}
       >
         {/* Input form */}
@@ -114,7 +145,7 @@ function App() {
               setInput(e.target.value);
               if (error) clearError();
             }}
-            placeholder="Channel link"
+            placeholder="Are.na channel link"
             spellCheck="false"
             autoComplete="off"
             className="w-full border-b border-[#1A1A1A] focus:outline-none pr-12 pb-2 placeholder:text-[#9CA3AF]"
@@ -138,6 +169,21 @@ function App() {
             {renderIcon()}
           </button>
         </form>
+
+        {/* Error Tooltip */}
+        {showTooltip && error && (
+          <div
+            ref={tooltipRef}
+            className="fixed pointer-events-none z-50 text-sm"
+            style={{
+              color: DESIGN_TOKENS.colors.error,
+              left: `${mousePositionRef.current.x + 15}px`,
+              top: `${mousePositionRef.current.y + 10}px`,
+            }}
+          >
+            Enter valid channel link
+          </div>
+        )}
 
         {/* Block display */}
         <BlockDisplay block={currentBlock} />
