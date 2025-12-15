@@ -11,6 +11,17 @@ const preloadImage = (url) => {
   });
 };
 
+// Preload video metadata before displaying block
+const preloadVideo = (url) => {
+  return new Promise((resolve) => {
+    if (!url) return resolve();
+    const video = document.createElement('video');
+    video.preload = 'metadata';
+    video.onloadedmetadata = video.onerror = () => resolve();
+    video.src = url;
+  });
+};
+
 export function useArenaChannel() {
   const [blocks, setBlocks] = useState([]);
   const [index, setIndex] = useState(0);
@@ -39,6 +50,11 @@ export function useArenaChannel() {
 
       if (first.image?.display?.url) {
         await preloadImage(first.image.display.url);
+      }
+
+      const isVideoBlock = first.attachment?.content_type?.startsWith('video/');
+      if (isVideoBlock && first.attachment?.url) {
+        await preloadVideo(first.attachment.url);
       }
 
       setBlocks(shuffled);
@@ -71,6 +87,11 @@ export function useArenaChannel() {
 
     if (next.image?.display?.url) {
       await preloadImage(next.image.display.url);
+    }
+
+    const isVideoBlock = next.attachment?.content_type?.startsWith('video/');
+    if (isVideoBlock && next.attachment?.url) {
+      await preloadVideo(next.attachment.url);
     }
 
     setIndex(nextIndex);

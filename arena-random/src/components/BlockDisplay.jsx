@@ -15,10 +15,9 @@ export function BlockDisplay({ block }) {
         className="group inline-block"
       >
         <h2
-          className="transition-colors group-hover:text-[#808080]"
+          className="transition-colors duration-100 group-hover:text-[#808080]"
           style={{
             fontSize: DESIGN_TOKENS.typography.blockTitle,
-            color: DESIGN_TOKENS.colors.text,
           }}
         >
           {title}
@@ -49,6 +48,57 @@ function BlockContent({ block }) {
   const imageUrl = block.image?.display?.url;
   const sourceUrl = block.source?.url;
   const attachmentUrl = block.attachment?.url;
+
+  // Helper: Check if block is a video
+  const isVideo = (block) => {
+    const contentType = block.attachment?.content_type;
+    const fileName = block.attachment?.file_name;
+    return (
+      contentType?.startsWith('video/') ||
+      /\.(mp4|webm|mov|avi|mkv)$/i.test(fileName || '')
+    );
+  };
+
+  // Helper: Check if block is a PDF
+  const isPDF = (block) => {
+    const contentType = block.attachment?.content_type;
+    const fileName = block.attachment?.file_name;
+    return (
+      contentType === 'application/pdf' ||
+      /\.pdf$/i.test(fileName || '')
+    );
+  };
+
+  // Video player (inline playback) - handles both Attachment and Media blocks
+  if (isVideo(block) && (block.class === "Media" || block.class === "Attachment") && attachmentUrl) {
+    return (
+      <video
+        src={attachmentUrl}
+        poster={imageUrl || undefined}
+        controls
+        preload="metadata"
+        playsInline
+        aria-label={block.attachment?.file_name || 'Video'}
+        className="w-full sm:max-w-[500px]"
+        style={{ maxWidth: `${DESIGN_TOKENS.sizes.imageWidth}px` }}
+      />
+    );
+  }
+
+  // PDF viewer (inline reading) - handles Attachment blocks
+  if (isPDF(block) && block.class === "Attachment" && attachmentUrl) {
+    return (
+      <iframe
+        src={attachmentUrl}
+        title={block.attachment?.file_name || 'PDF Document'}
+        className="w-full sm:max-w-[500px] border-0"
+        style={{
+          maxWidth: `${DESIGN_TOKENS.sizes.imageWidth}px`,
+          height: '600px'
+        }}
+      />
+    );
+  }
 
   // Link with image
   if (imageUrl && block.class === "Link" && sourceUrl) {
@@ -130,8 +180,32 @@ function BlockContent({ block }) {
     );
   }
 
+  // Attachment w/o video or PDF (ZIPs, etc.)
+  if (block.class === "Attachment" && attachmentUrl && !isVideo(block) && !isPDF(block)) {
+    return (
+      <a
+        href={attachmentUrl}
+        target="_blank"
+        rel="noopener noreferrer"
+        className="transition-colors hover:text-[#808080]"
+        style={{
+          fontSize: DESIGN_TOKENS.typography.blockContent,
+          color: DESIGN_TOKENS.colors.text,
+          textDecoration: "underline",
+        }}
+      >
+        {block.attachment?.file_name || attachmentUrl || "View attachment"}
+      </a>
+    );
+  }
+
   // Text cnt
-  if (block.class !== "Link" && block.class !== "Image" && block.class !== "Media" && block.content) {
+  if (
+    block.class !== "Link" &&
+    block.class !== "Image" &&
+    block.class !== "Media" &&
+    block.content
+  ) {
     return (
       <p
         className="whitespace-pre-wrap"
