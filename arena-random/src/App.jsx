@@ -80,7 +80,7 @@ function App() {
       return (
         <CircleNotch
           size={DESIGN_TOKENS.sizes.iconSize}
-          className="animate-spin will-change-transform backface-hidden"
+          className="animate-spin"
           color={DESIGN_TOKENS.colors.text}
         />
       );

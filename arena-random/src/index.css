@@ -100,6 +100,13 @@ button {
     }
 }
 
+/* Disable spin animation on touch devices to prevent mobile stuttering */
+@media (hover: none) {
+    .animate-spin {
+        animation: none;
+    }
+}
+
 /* Error icon enlarged hitbox using pseudo-element */
 .error-icon-hitbox::before {
     content: "";
