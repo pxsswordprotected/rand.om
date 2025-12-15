@@ -100,11 +100,10 @@ button {
     }
 }
 
-/* Disable spin animation on touch devices to prevent mobile stuttering */
-@media (hover: none) {
-    .animate-spin {
-        animation: none;
-    }
+/* GPU acceleration for spin animation wrapper */
+.animate-spin {
+    will-change: transform;
+    backface-visibility: hidden;
 }
 
 /* Error icon enlarged hitbox using pseudo-element */

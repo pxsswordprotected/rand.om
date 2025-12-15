@@ -78,11 +78,15 @@ function App() {
   const renderIcon = () => {
     if (loading) {
       return (
-        <CircleNotch
-          size={DESIGN_TOKENS.sizes.iconSize}
-          className="animate-spin"
-          color={DESIGN_TOKENS.colors.text}
-        />
+        <div
+          className="animate-spin inline-flex items-center justify-center"
+          style={{ width: "20px", height: "20px", verticalAlign: "middle" }}
+        >
+          <CircleNotch
+            size={DESIGN_TOKENS.sizes.iconSize}
+            color={DESIGN_TOKENS.colors.text}
+          />
+        </div>
       );
     }
     if (error) {
