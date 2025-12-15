@@ -9,19 +9,6 @@ import { useArenaChannel } from "./hooks/useArenaChannel";
 import { BlockDisplay } from "./components/BlockDisplay";
 import { DESIGN_TOKENS } from "./constants/designTokens";
 
-// A pure CSS spinner. No SVG. No Vector Math. No Wobble.
-const CSSSpinner = () => (
-  <div
-    className="animate-spin rounded-full border-2 border-gray-200 border-t-black"
-    style={{
-      width: "20px",
-      height: "20px",
-      // This ensures it spins around a perfect geometric center
-      boxSizing: "border-box",
-    }}
-  />
-);
-
 function App() {
   const [input, setInput] = useState("");
 
@@ -95,7 +82,10 @@ function App() {
           className="animate-spin inline-flex items-center justify-center"
           style={{ width: "20px", height: "20px", verticalAlign: "middle" }}
         >
-          <CSSSpinner />
+          <CircleNotch
+            size={DESIGN_TOKENS.sizes.iconSize}
+            color={DESIGN_TOKENS.colors.text}
+          />
         </div>
       );
     }
