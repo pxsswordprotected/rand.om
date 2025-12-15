@@ -94,7 +94,10 @@ function App() {
     <div className="min-h-screen bg-white">
       <div
         className="w-full max-w-[700px] mx-auto px-4 sm:px-6 lg:px-0"
-        style={{ paddingTop: "clamp(24px, 5vh, 48px)" }}
+        style={{
+          paddingTop: "clamp(24px, 5vh, 48px)",
+          paddingBottom: "clamp(24px, 5vh, 48px)"
+        }}
       >
         {/* Input form */}
         <form
@@ -120,7 +123,7 @@ function App() {
           <button
             type="button"
             onClick={handleSubmit}
-            disabled={loading || (!input.trim() && !hasLoaded) || !!error}
+            disabled={loading || !input.trim() || !!error}
             className="absolute right-0 bottom-1 p-2 disabled:cursor-default enabled:cursor-pointer select-none icon-button"
             aria-label={
               loading
