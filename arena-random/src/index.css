@@ -52,6 +52,9 @@ button {
         animation-duration: 0.01ms !important;
         transition-duration: 0.01ms !important;
     }
+    .animate-spin {
+        animation: none !important;
+    }
 }
 
 @keyframes fadeInScale {
@@ -100,10 +103,22 @@ button {
     }
 }
 
-/* GPU acceleration for spin animation wrapper */
+/* Custom stable spin animation with GPU acceleration */
+@keyframes spin-stable {
+    from {
+        transform: translate3d(0, 0, 0) rotate(0deg);
+    }
+    to {
+        transform: translate3d(0, 0, 0) rotate(360deg);
+    }
+}
+
 .animate-spin {
+    animation: spin-stable 1000ms linear infinite;
+    transform-origin: center center;
     will-change: transform;
     backface-visibility: hidden;
+    -webkit-backface-visibility: hidden;
 }
 
 /* Error icon enlarged hitbox using pseudo-element */
