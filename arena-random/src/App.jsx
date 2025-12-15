@@ -92,7 +92,7 @@ function App() {
           onMouseMove={handleTooltipMouseMove}
           onMouseLeave={handleTooltipMouseLeave}
           className="inline-block relative error-icon-hitbox"
-          style={{ verticalAlign: 'middle' }}
+          style={{ verticalAlign: "middle" }}
         >
           <Warning
             size={DESIGN_TOKENS.sizes.iconSize}
