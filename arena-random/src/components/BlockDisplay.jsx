@@ -1,9 +1,10 @@
 import { DESIGN_TOKENS } from "../constants/designTokens";
+import { decodeHtml } from "../utils/decodeHtml";
 
 export function BlockDisplay({ block }) {
   if (!block) return null;
 
-  const title = block.title || block.source?.title || "Untitled";
+  const title = decodeHtml(block.title || block.source?.title || "Untitled");
 
   return (
     <div key={block.id} className="mt-8 w-full block-enter">
@@ -175,7 +176,7 @@ function BlockContent({ block }) {
           textDecoration: "underline",
         }}
       >
-        {block.attachment?.file_name || sourceUrl || "View media"}
+        {decodeHtml(block.attachment?.file_name) || sourceUrl || "View media"}
       </a>
     );
   }
@@ -194,7 +195,7 @@ function BlockContent({ block }) {
           textDecoration: "underline",
         }}
       >
-        {block.attachment?.file_name || attachmentUrl || "View attachment"}
+        {decodeHtml(block.attachment?.file_name) || attachmentUrl || "View attachment"}
       </a>
     );
   }
@@ -214,7 +215,7 @@ function BlockContent({ block }) {
           color: DESIGN_TOKENS.colors.text,
         }}
       >
-        {block.content}
+        {decodeHtml(block.content)}
       </p>
     );
   }
