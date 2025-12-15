@@ -174,16 +174,26 @@ function App() {
           </button>
         </form>
 
-        {/* Error Tooltip */}
+        {/* Error Tooltip - Desktop only (hover) */}
         {showTooltip && error && (
           <div
             ref={tooltipRef}
-            className="fixed pointer-events-none z-50 text-sm"
+            className="hidden md:block fixed pointer-events-none z-50 text-sm"
             style={{
               color: DESIGN_TOKENS.colors.error,
               left: `${mousePositionRef.current.x + 15}px`,
               top: `${mousePositionRef.current.y + 10}px`,
             }}
+          >
+            Enter valid channel link
+          </div>
+        )}
+
+        {/* Error Message - Mobile only (static below input) */}
+        {error && (
+          <div
+            className="md:hidden text-sm mt-2"
+            style={{ color: DESIGN_TOKENS.colors.error }}
           >
             Enter valid channel link
           </div>
