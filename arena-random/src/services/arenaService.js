@@ -25,6 +25,7 @@ export async function getChannelBlocks(input) {
   const channelSlug = parseArenaInput(input);
 
   let allBlocks = [];
+  let channelTitle = "";
   let page = 1;
   const perPage = 100; // Max allowed by Are.na
 
@@ -36,6 +37,12 @@ export async function getChannelBlocks(input) {
     if (!response.ok) throw new Error("Channel not found");
 
     const data = await response.json();
+
+    // Capture channel title on first page
+    if (page === 1) {
+      channelTitle = data.title || "";
+    }
+
     const blocks = (data.contents || []).filter((block) => block && block.id);
 
     if (blocks.length === 0) break; // No more blocks
@@ -48,5 +55,5 @@ export async function getChannelBlocks(input) {
     page++;
   }
 
-  return allBlocks;
+  return { blocks: allBlocks, title: channelTitle };
 }

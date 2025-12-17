@@ -27,6 +27,7 @@ export function useArenaChannel() {
   const [index, setIndex] = useState(0);
   const [currentBlock, setCurrentBlock] = useState(null);
   const [channelSlug, setChannelSlug] = useState("");
+  const [channelTitle, setChannelTitle] = useState("");
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState("");
 
@@ -36,11 +37,12 @@ export function useArenaChannel() {
     setCurrentBlock(null);
 
     try {
-      const fetched = await getChannelBlocks(slug);
+      const { blocks: fetched, title } = await getChannelBlocks(slug);
 
       if (fetched.length === 0) {
         setError("Channel is empty");
         setChannelSlug("");
+        setChannelTitle("");
         setLoading(false);
         return;
       }
@@ -61,9 +63,11 @@ export function useArenaChannel() {
       setIndex(0);
       setCurrentBlock(first);
       setChannelSlug(slug);
+      setChannelTitle(title);
     } catch (err) {
       setError(err.message || "Channel not found");
       setChannelSlug("");
+      setChannelTitle("");
     }
 
     setLoading(false);
@@ -104,6 +108,7 @@ export function useArenaChannel() {
   return {
     currentBlock,
     channelSlug,
+    channelTitle,
     loading,
     error,
     hasLoaded: channelSlug !== "",

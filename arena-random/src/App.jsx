@@ -11,10 +11,12 @@ import { DESIGN_TOKENS } from "./constants/designTokens";
 
 function App() {
   const [input, setInput] = useState("");
+  const [isFocused, setIsFocused] = useState(false);
 
   const {
     currentBlock,
     channelSlug,
+    channelTitle,
     loading,
     error,
     hasLoaded,
@@ -29,6 +31,9 @@ function App() {
   const mousePositionRef = useRef({ x: 0, y: 0 });
 
   const isRefreshState = hasLoaded && input.trim() === channelSlug;
+
+  // Determine what to display in the input
+  const displayValue = isFocused || !hasLoaded ? input : channelTitle;
 
   // Handle form submission
   const handleSubmit = useCallback(async () => {
@@ -144,11 +149,13 @@ function App() {
         >
           <input
             type="text"
-            value={input}
+            value={displayValue}
             onChange={(e) => {
               setInput(e.target.value);
               if (error) clearError();
             }}
+            onFocus={() => setIsFocused(true)}
+            onBlur={() => setIsFocused(false)}
             placeholder="Are.na channel link"
             spellCheck="false"
             autoComplete="off"
