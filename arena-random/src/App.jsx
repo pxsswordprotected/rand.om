@@ -166,7 +166,7 @@ function App() {
             type="button"
             onClick={handleSubmit}
             disabled={loading || !input.trim() || !!error}
-            className="absolute right-0 bottom-1 p-2 disabled:cursor-default enabled:cursor-pointer select-none icon-button"
+            className="absolute -right-2 bottom-1 p-2 disabled:cursor-default enabled:cursor-pointer select-none icon-button"
             aria-label={
               loading
                 ? "Loading"
@@ -204,6 +204,20 @@ function App() {
           >
             Enter valid channel link
           </div>
+        )}
+
+        {/* Welcome message */}
+        {!hasLoaded && !loading && !error && (
+          <p
+            className="mt-8"
+            style={{
+              fontSize: DESIGN_TOKENS.typography.blockTitle,
+              color: "#000000",
+            }}
+          >
+            Rand.om fetches random blocks from Are.na channels. Paste a link to
+            get started.
+          </p>
         )}
 
         {/* Block display */}
